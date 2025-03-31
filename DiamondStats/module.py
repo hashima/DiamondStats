@@ -105,8 +105,10 @@ def drawCourse(img, x, y, _df_course):
               ['(B)下1', '(B)下2',    '(B)下3',    '(B)下4',   '(B)下5']]
 
     select = course[x][y]
-    ab = float(_df_course[_df_course['コース'] == select]['打席_x'].iloc[0])
+    ab = int(_df_course[_df_course['コース'] == select]['打席_x'].iloc[0])
     ave = float(_df_course[_df_course['コース'] == select]['ave'].iloc[0])
-    hit = float(_df_course[_df_course['コース'] == select]['打席_y'].iloc[0])
+    hit = int(_df_course[_df_course['コース'] == select]['打席_y'].iloc[0])
     cv2.rectangle(img, (5+x*92, 5+y*133), (5+(x+1)*92, 5+(y+1)*133), (0, 0, 0))
-    cv2.putText(img, f"{ave:.3f}", (5+x*92+10, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), thickness=2)
+    if ab > 0:
+        cv2.putText(img, f"{ave:.3f}", (5+x*92+17, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+        cv2.putText(img, f"{ab}-{hit}", (5+x*92+28, 5+y*133+40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
