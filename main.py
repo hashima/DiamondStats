@@ -6,21 +6,6 @@ import numpy as np
 
 import DiamondStats as ds
 
-def drawCourse(img, x, y, _df_course):
-
-    course = [['(B)上1', '(B)上2',    '(B)上3',    '(B)上4',   '(B)上5'],
-              ['(B)左1', '(S)左上',   '(S)中央上', '(S)右上',   '(B)右1'],
-              ['(B)左2', '(S)左中央', '(S)中央',   '(S)右中央', '(B)右2'],
-              ['(B)左3', '(S)左下',   '(S)中央下', '(S)右下',   '(B)右3'],
-              ['(B)下1', '(B)下2',    '(B)下3',    '(B)下4',   '(B)下5']]
-
-    select = course[x][y]
-    ab = float(_df_course[_df_course['コース'] == select]['打席_x'].iloc[0])
-    ave = float(_df_course[_df_course['コース'] == select]['ave'].iloc[0])
-    hit = float(_df_course[_df_course['コース'] == select]['打席_y'].iloc[0])
-    cv2.rectangle(img, (5+x*92, 5+y*133), (5+(x+1)*92, 5+(y+1)*133), (0, 0, 0))
-    cv2.putText(img, str(round(ave, 3)), (5+x*92+10, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), thickness=2)
-
     
 if __name__ == "__main__":
 

@@ -7,7 +7,7 @@ import cv2
 
 def loadWorkSheet(gc, id, sheetname):
 
-    url = "https://docs.google.com/spreadsheets/d/{}/edit#gid=0".format(id)
+    url = "https://docs.google.com/spreadsheets/d/{}/".format(id)
     ss = gc.open_by_url(url)
 
     # シートを特定する（シート名で特定）
