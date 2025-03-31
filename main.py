@@ -4,8 +4,7 @@ import pandas as pd
 import cv2
 import numpy as np
 
-import DiamondStats
-import DiamondStats.module as ds
+import DiamondStats as ds
 
 def drawCourse(img, x, y, _df_course):
 
@@ -26,9 +25,9 @@ def drawCourse(img, x, y, _df_course):
 if __name__ == "__main__":
 
     # マスタデータ読み込み
-    # df_master = ds.loadWorkSheet('1zwas-6Xf5UgTnX_Hcx_DvB0xVV-ugqI55QAz9N6cDqU', '入力規則')
-    # df_gameinfo = ds.loadWorkSheet('1zwas-6Xf5UgTnX_Hcx_DvB0xVV-ugqI55QAz9N6cDqU', '試合情報')
-    # df_score = ds.loadWorkSheet('1zwas-6Xf5UgTnX_Hcx_DvB0xVV-ugqI55QAz9N6cDqU', '打席スコア')
+    # df_master = ds.loadWorkSheet(gc, '1zwas-6Xf5UgTnX_Hcx_DvB0xVV-ugqI55QAz9N6cDqU', '入力規則')
+    # df_gameinfo = ds.loadWorkSheet(gc, '1zwas-6Xf5UgTnX_Hcx_DvB0xVV-ugqI55QAz9N6cDqU', '試合情報')
+    # df_score = ds.loadWorkSheet(gc, '1zwas-6Xf5UgTnX_Hcx_DvB0xVV-ugqI55QAz9N6cDqU', '打席スコア')
     df_master = pd.read_csv('DiamondStats/data/Master.csv')
     df_gameinfo = pd.read_csv('DiamondStats/data/gameinfo.csv')
     df_score = pd.read_csv('DiamondStats/data/score.csv')
