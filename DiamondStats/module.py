@@ -19,7 +19,7 @@ def loadWorkSheet(gc, id, sheetname):
 
     return df_master
 
-def initDataFrames(df_master, df_gameinfo, df_score):
+def initDataFrames(df_master, df_gameinfo, df_score, throws):
 
     df_master = df_master.loc[:, :'投手左右']
     df_gameinfo = df_gameinfo.loc[:, :'対戦相手']
@@ -27,6 +27,10 @@ def initDataFrames(df_master, df_gameinfo, df_score):
     df_gameinfo['試合No'] = df_gameinfo['試合No'].dropna().astype(int)
     df_score = df_score.loc[:, :'アウト']
     df_score = df_score.dropna(subset=['試合No'])
+    if throws == '対右投手':
+        df_score = df_score.query("'投' == '右'")
+    if throws == '対左投手':
+        df_score = df_score.query("'投' == '左'")
     df_score['試合No'] = df_score['試合No'].dropna().astype(int)
     df_score['打席'] = df_score['打席'].dropna().astype(int)
     df_score['アウト'] = df_score['アウト'].dropna().astype(int)
@@ -140,7 +144,7 @@ def drawCourse(img, x, y, _df_course):
     hit = int(_df_course[_df_course['コース'] == select]['打席_y'].iloc[0])
     cv2.rectangle(img, (5+x*92, 5+y*133), (5+(x+1)*92, 5+(y+1)*133), (0, 0, 0))
     if ab > 0:
-        cv2.putText(img, f"{ave:.3f}", (5+x*92+17, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+        cv2.putText(img, f"{ave:.3f}".lstrip('0'), (5+x*92+17, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
         cv2.putText(img, f"{ab}-{hit}", (5+x*92+28, 5+y*133+40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
 
 def getCountAB(df_score_result_ab, df_score_result_hit):
@@ -159,7 +163,9 @@ def getCountAB(df_score_result_ab, df_score_result_hit):
                 df_match_2h = df_score_result_hit.query("B == {} and S == {} and (打撃結果 == '二塁打' or 打撃結果 == 'エンタイトル二塁打')".format(b, s))
                 df_match_3h = df_score_result_hit.query("B == {} and S == {} and 打撃結果 == '三塁打'".format(b, s))
                 df_match_hr = df_score_result_hit.query("B == {} and S == {} and (打撃結果 == '本塁打' or 打撃結果 == '本塁打(R)')".format(b, s))
-                df_count_ab.loc[len(df_count_ab)] = ["{}-{}".format(b, s), len(df_match_hit) / len(df_match_ab), len(df_match_ab), len(df_match_hit), len(df_match_single), len(df_match_2h), len(df_match_3h), len(df_match_hr)]
+                df_count_ab.loc[len(df_count_ab)] = ["{} - {}".format(b, s), len(df_match_hit) / len(df_match_ab), len(df_match_ab), len(df_match_hit), len(df_match_single), len(df_match_2h), len(df_match_3h), len(df_match_hr)]
+
+    df_count_ab['打率'] = df_count_ab['打率'].map(lambda x: f"{x:.3f}".lstrip('0'))
 
     return df_count_ab
     

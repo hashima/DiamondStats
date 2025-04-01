@@ -21,7 +21,7 @@ if __name__ == "__main__":
     df_master, df_gameinfo, df_score = ds.initDataFrames(df_master, df_gameinfo, df_score)
 
     # 各アイテムのマスタを取得
-    game_cat_list, ground_list, opponent_list, course_list, pitch_list, pitching_esults_list, ball_attributes_list, ball_direction_list, batting_results_list, pitcher_RL_list = ds.getItems(df_master)
+    # game_cat_list, ground_list, opponent_list, course_list, pitch_list, pitching_esults_list, ball_attributes_list, ball_direction_list, batting_results_list, pitcher_RL_list = ds.getItems(df_master)
 
     # 通算打率の取得
     ave = ds.getBattingAverage(df_score)
