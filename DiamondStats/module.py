@@ -31,9 +31,9 @@ def initDataFrames(df_master, df_gameinfo, df_score, throws):
         df_score = df_score.query("投 == '右'")
     if throws == '対左投手':
         df_score = df_score.query("投 == '左'")
-    df_score['試合No'] = df_score['試合No'].dropna().astype(int)
-    df_score['打席'] = df_score['打席'].dropna().astype(int)
-    df_score['アウト'] = df_score['アウト'].dropna().astype(int)
+    df_score.loc[:, '試合No'] = df_score['試合No'].dropna().astype(int)
+    df_score.loc[:, '打席'] = df_score['打席'].dropna().astype(int)
+    df_score.loc[:, 'アウト'] = df_score['アウト'].dropna().astype(int)
     df_score['B'] = 0
     df_score['S'] = 0
     df_score.loc[:, 'B'] = df_score['B'].dropna().astype(int)
