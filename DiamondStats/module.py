@@ -123,7 +123,7 @@ def getBattingAverage(df_score):
 
     all_rows = len(df_score_result)
     # 結果の表示
-    ave = target_rows / all_rows
+    ave = target_rows / all_rows if all_rows > 0 else 0
     # print(f"打率: {round(ave, 3)}")
 
     return ave
