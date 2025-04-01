@@ -25,12 +25,42 @@ def initDataFrames(df_master, df_gameinfo, df_score):
     df_gameinfo = df_gameinfo.loc[:, :'対戦相手']
     df_gameinfo = df_gameinfo.dropna(subset=['試合No'])
     df_gameinfo['試合No'] = df_gameinfo['試合No'].dropna().astype(int)
-    df_score = df_score.loc[:, :'打撃結果']
+    df_score = df_score.loc[:, :'アウト']
     df_score = df_score.dropna(subset=['試合No'])
     df_score['試合No'] = df_score['試合No'].dropna().astype(int)
     df_score['打席'] = df_score['打席'].dropna().astype(int)
+    df_score['アウト'] = df_score['アウト'].dropna().astype(int)
+    df_score['B'] = 0
+    df_score['S'] = 0
+    df_score['B'] = df_score['B'].dropna().astype(int)
+    df_score['S'] = df_score['S'].dropna().astype(int)
+
+    df_score = setBSO(df_score)
 
     return df_master, df_gameinfo, df_score
+
+def setBSO(df_score):
+
+    game_no = 0
+    ab_no = 0
+    b = 0
+    s = 0
+    for row in df_score.itertuples(index=True, name="Row"):
+        if row.試合No != game_no or row.打席 != ab_no:
+            b = 0
+            s = 0
+            game_no = row.試合No
+            ab_no = row.打席
+
+        if row.投球結果.startswith("(S)") or row.投球結果.startswith("(F)"):
+            s = min(s + 1, 2)
+        if row.投球結果.startswith("(B)") or row.投球結果.startswith("(F)"):
+            b = min(b + 1, 3)
+
+        df_score.at[row.Index, "B"] = b
+        df_score.at[row.Index, "S"] = s
+
+    return df_score 
 
 def getScoreResult(df_score):
 
@@ -112,3 +142,24 @@ def drawCourse(img, x, y, _df_course):
     if ab > 0:
         cv2.putText(img, f"{ave:.3f}", (5+x*92+17, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
         cv2.putText(img, f"{ab}-{hit}", (5+x*92+28, 5+y*133+40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+
+def getCountAB(df_score_result_ab, df_score_result_hit):
+
+    df_count_ab = pd.DataFrame(columns=["カウント", "打率", "打数", "安打", "単打", "2塁打", "3塁打", "本塁打"])
+
+    for b in range(0,4):
+        for s in range(0,3):
+            df_match_ab = df_score_result_ab.query("B == {} and S == {}".format(b, s))
+
+            if df_match_ab.empty:
+                df_count_ab.loc[len(df_count_ab)] = ["{}-{}".format(b, s), 0, 0, 0, 0, 0, 0, 0]
+            else:
+                df_match_hit = df_score_result_hit.query("B == {} and S == {}".format(b, s))
+                df_match_single = df_score_result_hit.query("B == {} and S == {} and 打撃結果 == '安打'".format(b, s))
+                df_match_2h = df_score_result_hit.query("B == {} and S == {} and (打撃結果 == '二塁打' or 打撃結果 == 'エンタイトル二塁打')".format(b, s))
+                df_match_3h = df_score_result_hit.query("B == {} and S == {} and 打撃結果 == '三塁打'".format(b, s))
+                df_match_hr = df_score_result_hit.query("B == {} and S == {} and (打撃結果 == '本塁打' or 打撃結果 == '本塁打(R)')".format(b, s))
+                df_count_ab.loc[len(df_count_ab)] = ["{}-{}".format(b, s), len(df_match_hit) / len(df_match_ab), len(df_match_ab), len(df_match_hit), len(df_match_single), len(df_match_2h), len(df_match_3h), len(df_match_hr)]
+
+    return df_count_ab
+    

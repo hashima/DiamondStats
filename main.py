@@ -38,6 +38,8 @@ if __name__ == "__main__":
     # コース別の結果画像の取得
     img = ds.getCourseResultImg(df_course)
 
+    # カウント別の成績
+    df_count_ab = ds.getCountAB(df_score_result_ab, df_score_result_hit)
 
     # cv2_imshow(img)
     cv2.imshow('Image-1', img)
