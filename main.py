@@ -17,8 +17,9 @@ if __name__ == "__main__":
     df_gameinfo = pd.read_csv('DiamondStats/data/gameinfo.csv')
     df_score = pd.read_csv('DiamondStats/data/score.csv')
  
+    throws = "通算" # @param ["通算","対右投手","対左投手"]
     # データフレームの初期化
-    df_master, df_gameinfo, df_score = ds.initDataFrames(df_master, df_gameinfo, df_score)
+    df_master, df_gameinfo, df_score = ds.initDataFrames(df_master, df_gameinfo, df_score, throws)
 
     # 各アイテムのマスタを取得
     # game_cat_list, ground_list, opponent_list, course_list, pitch_list, pitching_esults_list, ball_attributes_list, ball_direction_list, batting_results_list, pitcher_RL_list = ds.getItems(df_master)
