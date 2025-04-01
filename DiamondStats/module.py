@@ -156,7 +156,7 @@ def getCountAB(df_score_result_ab, df_score_result_hit):
             df_match_ab = df_score_result_ab.query("B == {} and S == {}".format(b, s))
 
             if df_match_ab.empty:
-                df_count_ab.loc[len(df_count_ab)] = ["{}-{}".format(b, s), 0, 0, 0, 0, 0, 0, 0]
+                df_count_ab.loc[len(df_count_ab)] = ["{} - {}".format(b, s), 0, 0, 0, 0, 0, 0, 0]
             else:
                 df_match_hit = df_score_result_hit.query("B == {} and S == {}".format(b, s))
                 df_match_single = df_score_result_hit.query("B == {} and S == {} and 打撃結果 == '安打'".format(b, s))
