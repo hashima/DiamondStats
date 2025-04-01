@@ -36,8 +36,8 @@ def initDataFrames(df_master, df_gameinfo, df_score, throws):
     df_score['アウト'] = df_score['アウト'].dropna().astype(int)
     df_score['B'] = 0
     df_score['S'] = 0
-    df_score['B'] = df_score['B'].dropna().astype(int)
-    df_score['S'] = df_score['S'].dropna().astype(int)
+    df_score.loc[:, 'B'] = df_score['B'].dropna().astype(int)
+    df_score.loc[:, 'S'] = df_score['S'].dropna().astype(int)
 
     df_score = setBSO(df_score)
 
