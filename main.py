@@ -17,7 +17,7 @@ if __name__ == "__main__":
     df_gameinfo = pd.read_csv('DiamondStats/data/gameinfo.csv')
     df_score = pd.read_csv('DiamondStats/data/score.csv')
  
-    throws = "通算" # @param ["通算","対右投手","対左投手"]
+    throws = "対右投手" # @param ["通算","対右投手","対左投手"]
     # データフレームの初期化
     df_master, df_gameinfo, df_score = ds.initDataFrames(df_master, df_gameinfo, df_score, throws)
 
