@@ -3,7 +3,13 @@ import glob
 import os
 import numpy as np
 import cv2
-
+import pandas as pd
+pd.set_option('display.max_columns', None)
+import seaborn as sns
+sns.set()
+import matplotlib.pyplot as plt
+import japanize_matplotlib
+japanize_matplotlib.japanize()
 
 def loadWorkSheet(gc, id, sheetname):
 
