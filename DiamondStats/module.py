@@ -84,12 +84,17 @@ def getCourseResult(df_master, df_score_result_ab, df_score_result_hit):
 
     df_course_ab = df_score_result_ab.groupby('コース')['打席'].count().reset_index()
     df_course_hit = df_score_result_hit.groupby('コース')['打席'].count().reset_index()
+    df_course_k = df_score_result_ab[df_score_result_ab['打撃結果'] == '三振'].groupby('コース')['打撃結果'].count().reset_index()
 
     df_course = df_master[['コース']].dropna(subset=['コース'])
     df_course = pd.merge(df_course, df_course_ab, on='コース', how='left')
     df_course = pd.merge(df_course, df_course_hit, on='コース', how='left')
+    df_course = pd.merge(df_course, df_course_k, on='コース', how='left')
+    df_course = df_course.rename(columns={'打席_x': '打数'})
+    df_course = df_course.rename(columns={'打席_y': '安打数'})
+    df_course = df_course.rename(columns={'打撃結果': '三振数'})
     df_course = df_course.fillna(0)
-    df_course['ave'] = df_course['打席_y'] / df_course['打席_x'].replace(0, float('nan'))
+    df_course['打率'] = df_course['安打数'] / df_course['打数'].replace(0, float('nan'))
     df_course = df_course.fillna(0)
 
     return df_course
@@ -145,13 +150,22 @@ def drawCourse(img, x, y, _df_course):
               ['(B)下1', '(B)下2',    '(B)下3',    '(B)下4',   '(B)下5']]
 
     select = course[x][y]
-    ab = int(_df_course[_df_course['コース'] == select]['打席_x'].iloc[0])
-    ave = float(_df_course[_df_course['コース'] == select]['ave'].iloc[0])
-    hit = int(_df_course[_df_course['コース'] == select]['打席_y'].iloc[0])
+    # 打数
+    ab = int(_df_course[_df_course['コース'] == select]['打数'].iloc[0])
+    # 打率
+    ave = float(_df_course[_df_course['コース'] == select]['打率'].iloc[0])
+    # 安打数
+    hit = int(_df_course[_df_course['コース'] == select]['安打数'].iloc[0])
+    # 三振数
+    k = int(_df_course[_df_course['コース'] == select]['三振数'].iloc[0])
     cv2.rectangle(img, (5+x*92, 5+y*133), (5+(x+1)*92, 5+(y+1)*133), (0, 0, 0))
     if ab > 0:
-        cv2.putText(img, f"{ave:.3f}".lstrip('0'), (5+x*92+17, 5+y*133+60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
-        cv2.putText(img, f"{ab}-{hit}", (5+x*92+28, 5+y*133+40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+        (text_width, text_height), baseline = cv2.getTextSize(f"{ab}-{hit}", cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.putText(img, f"{ab}-{hit}", (5+x*92+(92-text_width)//2, 5+y*133+40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+        (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.putText(img, f"{ave:.3f}".lstrip('0'), (5+x*92+(92-text_width)//2, 5+y*133+70), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+        (text_width, text_height), baseline = cv2.getTextSize(f"K : {k}", cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        cv2.putText(img, f"K : {k}", (5+x*92+(92-text_width)//2, 5+y*133+100), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
 
 def getCountAB(df_score_result_ab, df_score_result_hit):
 
