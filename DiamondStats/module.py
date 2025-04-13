@@ -48,7 +48,7 @@ def initDataFrames(df_master, df_gameinfo, df_score, dt_from, dt_to, target_game
     elif dt_to != "":
         df_gameinfo = df_gameinfo[df_gameinfo['日付'] <= pd.to_datetime(dt_to)]
 
-    if not dt_from == None or not dt_to == None:
+    if dt_from != "" or dt_to != "":
         df_score = df_score[df_score['試合No'].isin(df_gameinfo['試合No'])]
     
     df_score = df_score.loc[:, :'アウト']
