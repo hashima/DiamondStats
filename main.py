@@ -17,9 +17,9 @@ if __name__ == "__main__":
     df_gameinfo = pd.read_csv('DiamondStats/data/gameinfo.csv')
     df_score = pd.read_csv('DiamondStats/data/score.csv')
  
-    dt_from = None
+    dt_from = ""
     # dt_from = '2025/05/11'
-    dt_to = None
+    dt_to = ""
     target_game = "全試合" # @param ["全試合", "公式戦", "OP戦", "A戦", "B戦"]
     throws = "通算" # @param ["通算","対右投手","対左投手"]
     # データフレームの初期化

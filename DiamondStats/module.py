@@ -1,4 +1,3 @@
-import pandas as pd
 import glob
 import os
 import numpy as np
@@ -42,11 +41,11 @@ def initDataFrames(df_master, df_gameinfo, df_score, dt_from, dt_to, target_game
     elif target_game == 'B戦':
         df_gameinfo = df_gameinfo[df_gameinfo['試合種別'].isin(['B戦 第1試合', 'B戦 第2試合'])]
 
-    if not dt_from == None and not dt_to == None:
+    if dt_from != "" and dt_to != "":
         df_gameinfo = df_gameinfo[pd.to_datetime(dt_from) <= df_gameinfo['日付'] and df_gameinfo['日付'] <= pd.to_datetime(dt_to)]
-    elif not dt_from == None:
+    elif dt_from != "":
         df_gameinfo = df_gameinfo[pd.to_datetime(dt_from) <= df_gameinfo['日付']]
-    elif not dt_to == None:
+    elif dt_to != "":
         df_gameinfo = df_gameinfo[df_gameinfo['日付'] <= pd.to_datetime(dt_to)]
 
     if not dt_from == None or not dt_to == None:
@@ -222,8 +221,6 @@ def getDirectionResult(df_master, df_score_result_ab, df_score_result_hit):
 
     list_direction_ad = [0,0,0,0,0,0,0,0,0]
     list_direction_hit = [0,0,0,0,0,0,0,0,0]
-    ab = int(df_direction[df_direction['打球方向'] == '投手']['打数'].iloc[0])
-    hit = df_direction[df_direction['打球方向'] == '投手']['安打数']
     list_direction_ad[0] = int(df_direction[df_direction['打球方向'] == '投手']['打数'].iloc[0])
     list_direction_hit[0] = int(df_direction[df_direction['打球方向'] == '投手']['安打数'].iloc[0])
     list_direction_ad[1] = int(df_direction[df_direction['打球方向'] == '捕手']['打数'].iloc[0])
