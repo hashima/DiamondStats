@@ -10,6 +10,7 @@ sns.set()
 import matplotlib.pyplot as plt
 import japanize_matplotlib
 japanize_matplotlib.japanize()
+import base64
 
 def loadWorkSheet(gc, id, sheetname):
 
@@ -25,12 +26,32 @@ def loadWorkSheet(gc, id, sheetname):
 
     return df_master
 
-def initDataFrames(df_master, df_gameinfo, df_score, throws):
+def initDataFrames(df_master, df_gameinfo, df_score, dt_from, dt_to, target_game, throws):
 
     df_master = df_master.loc[:, :'投手左右']
     df_gameinfo = df_gameinfo.loc[:, :'対戦相手']
     df_gameinfo = df_gameinfo.dropna(subset=['試合No'])
     df_gameinfo['試合No'] = df_gameinfo['試合No'].dropna().astype(int)
+    df_gameinfo['日付'] = pd.to_datetime(df_gameinfo['日付'])
+    if target_game == '公式戦':
+        df_gameinfo = df_gameinfo[~df_gameinfo['試合種別'].isin(['A戦 第1試合', 'A戦 第2試合', 'B戦 第1試合', 'B戦 第2試合'])]
+    elif target_game == 'OP戦':
+        df_gameinfo = df_gameinfo[df_gameinfo['試合種別'].isin(['A戦 第1試合', 'A戦 第2試合', 'B戦 第1試合', 'B戦 第2試合'])]
+    elif target_game == 'A戦':
+        df_gameinfo = df_gameinfo[df_gameinfo['試合種別'].isin(['A戦 第1試合', 'A戦 第2試合'])]
+    elif target_game == 'B戦':
+        df_gameinfo = df_gameinfo[df_gameinfo['試合種別'].isin(['B戦 第1試合', 'B戦 第2試合'])]
+
+    if not dt_from == None and not dt_to == None:
+        df_gameinfo = df_gameinfo[pd.to_datetime(dt_from) <= df_gameinfo['日付'] and df_gameinfo['日付'] <= pd.to_datetime(dt_to)]
+    elif not dt_from == None:
+        df_gameinfo = df_gameinfo[pd.to_datetime(dt_from) <= df_gameinfo['日付']]
+    elif not dt_to == None:
+        df_gameinfo = df_gameinfo[df_gameinfo['日付'] <= pd.to_datetime(dt_to)]
+
+    if not dt_from == None or not dt_to == None:
+        df_score = df_score[df_score['試合No'].isin(df_gameinfo['試合No'])]
+    
     df_score = df_score.loc[:, :'アウト']
     df_score = df_score.dropna(subset=['試合No'])
     if throws == '対右投手':
@@ -139,8 +160,6 @@ def getBattingAverage(df_score):
 
     return ave
 
-
-
 def drawCourse(img, x, y, _df_course):
 
     course = [['(B)上1', '(B)上2',    '(B)上3',    '(B)上4',   '(B)上5'],
@@ -189,3 +208,135 @@ def getCountAB(df_score_result_ab, df_score_result_hit):
 
     return df_count_ab
     
+def getDirectionResult(df_master, df_score_result_ab, df_score_result_hit):
+    df_direction_ab = df_score_result_ab.groupby('打球方向')['打席'].count().reset_index()
+    df_direction_ab = df_direction_ab.rename(columns={'打席': '打数'})
+    df_direction_hit = df_score_result_hit.groupby('打球方向')['打席'].count().reset_index()
+    df_direction_hit = df_direction_hit.rename(columns={'打席': '安打数'})
+
+    df_direction = df_master[['打球方向']].dropna(subset=['打球方向'])
+    df_direction = pd.merge(df_direction, df_direction_ab, on='打球方向', how='left')
+    df_direction = pd.merge(df_direction, df_direction_hit, on='打球方向', how='left')
+    df_direction['打数'] = df_direction['打数'].fillna(0).astype(int)
+    df_direction['安打数'] = df_direction['安打数'].fillna(0).astype(int)
+
+    list_direction_ad = [0,0,0,0,0,0,0,0,0]
+    list_direction_hit = [0,0,0,0,0,0,0,0,0]
+    ab = int(df_direction[df_direction['打球方向'] == '投手']['打数'].iloc[0])
+    hit = df_direction[df_direction['打球方向'] == '投手']['安打数']
+    list_direction_ad[0] = int(df_direction[df_direction['打球方向'] == '投手']['打数'].iloc[0])
+    list_direction_hit[0] = int(df_direction[df_direction['打球方向'] == '投手']['安打数'].iloc[0])
+    list_direction_ad[1] = int(df_direction[df_direction['打球方向'] == '捕手']['打数'].iloc[0])
+    list_direction_hit[1] = int(df_direction[df_direction['打球方向'] == '捕手']['安打数'].iloc[0])
+    list_direction_ad[2] = int(df_direction[df_direction['打球方向'] == '一塁手']['打数'].iloc[0])
+    list_direction_hit[2] = int(df_direction[df_direction['打球方向'] == '一塁手']['安打数'].iloc[0])
+    list_direction_ad[3] = int(df_direction[df_direction['打球方向'] == '二塁手']['打数'].iloc[0])
+    list_direction_hit[3] = int(df_direction[df_direction['打球方向'] == '二塁手']['安打数'].iloc[0])
+    list_direction_ad[4] = int(df_direction[df_direction['打球方向'] == '三塁手']['打数'].iloc[0])
+    list_direction_hit[4] = int(df_direction[df_direction['打球方向'] == '三塁手']['安打数'].iloc[0])
+    list_direction_ad[5] = int(df_direction[df_direction['打球方向'] == '遊撃手']['打数'].iloc[0])
+    list_direction_hit[5] = int(df_direction[df_direction['打球方向'] == '遊撃手']['安打数'].iloc[0])
+    list_direction_ad[6] = int(df_direction[df_direction['打球方向'] == '左翼手']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '三遊間']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'レフト線']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'レフトオーバー']['打数'].iloc[0])
+    list_direction_hit[6] = int(df_direction[df_direction['打球方向'] == '左翼手']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '三遊間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'レフト線']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'レフトオーバー']['安打数'].iloc[0])
+    list_direction_ad[7] = int(df_direction[df_direction['打球方向'] == '中堅手']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '左中間']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '右中間']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'センターオーバー']['打数'].iloc[0])
+    list_direction_hit[7] = int(df_direction[df_direction['打球方向'] == '中堅手']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '左中間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '右中間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'センターオーバー']['安打数'].iloc[0])
+    list_direction_ad[8] = int(df_direction[df_direction['打球方向'] == '右翼手']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '一二塁間']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライト線']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライトオーバー']['打数'].iloc[0])
+    list_direction_hit[8] = int(df_direction[df_direction['打球方向'] == '右翼手']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '一二塁間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライト線']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライトオーバー']['安打数'].iloc[0])
+    return list_direction_ad, list_direction_hit
+
+def drawDirection(list_direction_ad, list_direction_hit):
+    # キャンバス作成（白背景）
+    height, width = 600, 800
+    field = np.ones((height, width, 3), dtype=np.uint8) * 255
+
+    # 中心座標とフィールドサイズ設定
+    center_x, center_y = width // 2, height - 50
+    radius = 300
+    base_offset = 100
+
+    # 外野の半円（緑：線画なので色は省略して黒に）
+    cv2.ellipse(field, (center_x, center_y - 280), (radius, 250), 0, 184, 356, (0, 0, 0), 2)
+
+    # 内野のダイヤモンド（四角形）
+    pts = np.array([
+        [center_x, center_y],                            # ホームベース
+        [center_x - base_offset, center_y - base_offset],# サード
+        [center_x, center_y - base_offset * 2],          # セカンド
+        [center_x + base_offset, center_y - base_offset],# ファースト
+    ], np.int32)
+    # cv2.polylines(field, [pts], isClosed=True, color=(0, 0, 0), thickness=2)
+
+    line_offset = 300
+    cv2.line(field, (center_x, center_y), (center_x + line_offset, center_y - line_offset), (0, 0, 0), 2)
+    cv2.line(field, (center_x, center_y), (center_x - line_offset, center_y - line_offset), (0, 0, 0), 2)
+
+    # ピッチャーマウンド（小さい円）
+    # cv2.circle(field, (center_x, center_y - int(base_offset * 1.2)), 10, (0, 0, 0), 2)
+
+    # ベース（小さな四角で描画）
+    # base_size = 7
+    # for x, y in pts:
+    #     cv2.rectangle(field, (x - base_size, y - base_size), (x + base_size, y + base_size), (0, 0, 0), 1)
+
+    # ホームベースも描画
+    # cv2.rectangle(field, (center_x - base_size, center_y - base_size), (center_x + base_size, center_y + base_size), (0, 0, 0), 1)
+
+    ave = 0.333
+    ab = 10
+    hit = 3
+    # ピッチャー
+    ave = 0 if list_direction_ad[0] == 0 else list_direction_hit[0]/list_direction_ad[0]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[0]}-{list_direction_hit[0]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (center_x - text_width//2, 420), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[0]}-{list_direction_hit[0]}", (center_x - ab_text_width//2, 443), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # キャッチャー
+    ave = 0 if list_direction_ad[1] == 0 else list_direction_hit[1]/list_direction_ad[1]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[1]}-{list_direction_hit[1]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (center_x - text_width//2, 500), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[1]}-{list_direction_hit[1]}", (center_x - ab_text_width//2, 523), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # ファースト
+    ave = 0 if list_direction_ad[2] == 0 else list_direction_hit[2]/list_direction_ad[2]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[2]}-{list_direction_hit[2]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (530 - text_width//2, 360), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[2]}-{list_direction_hit[2]}", (530 - ab_text_width//2, 383), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # セカンド
+    ave = 0 if list_direction_ad[3] == 0 else list_direction_hit[3]/list_direction_ad[3]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[3]}-{list_direction_hit[3]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (460 - text_width//2, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[3]}-{list_direction_hit[3]}", (460 - ab_text_width//2, 323), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # サード
+    ave = 0 if list_direction_ad[4] == 0 else list_direction_hit[4]/list_direction_ad[4]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[4]}-{list_direction_hit[4]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (270 - text_width//2, 360), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[4]}-{list_direction_hit[4]}", (270 - ab_text_width//2, 383), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # ショート
+    ave = 0 if list_direction_ad[5] == 0 else list_direction_hit[5]/list_direction_ad[5]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[5]}-{list_direction_hit[5]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (340 - text_width//2, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[5]}-{list_direction_hit[5]}", (340 - ab_text_width//2, 323), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # レフト
+    ave = 0 if list_direction_ad[6] == 0 else list_direction_hit[6]/list_direction_ad[6]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[6]}-{list_direction_hit[6]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (240 - text_width//2, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[6]}-{list_direction_hit[6]}", (240 - ab_text_width//2, 233), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # センター
+    ave = 0 if list_direction_ad[7] == 0 else list_direction_hit[7]/list_direction_ad[7]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[7]}-{list_direction_hit[7]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (center_x - text_width//2, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[7]}-{list_direction_hit[7]}", (center_x - ab_text_width//2, 143), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+    # ライト
+    ave = 0 if list_direction_ad[8] == 0 else list_direction_hit[8]/list_direction_ad[8]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[8]}-{list_direction_hit[8]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (560 - text_width//2, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[8]}-{list_direction_hit[8]}", (560 - ab_text_width//2, 233), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+
+    return field

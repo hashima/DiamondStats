@@ -17,9 +17,13 @@ if __name__ == "__main__":
     df_gameinfo = pd.read_csv('DiamondStats/data/gameinfo.csv')
     df_score = pd.read_csv('DiamondStats/data/score.csv')
  
+    dt_from = None
+    # dt_from = '2025/05/11'
+    dt_to = None
+    target_game = "全試合" # @param ["全試合", "公式戦", "OP戦", "A戦", "B戦"]
     throws = "通算" # @param ["通算","対右投手","対左投手"]
     # データフレームの初期化
-    df_master, df_gameinfo, df_score = ds.initDataFrames(df_master, df_gameinfo, df_score, throws)
+    df_master, df_gameinfo, df_score = ds.initDataFrames(df_master, df_gameinfo, df_score, dt_from, dt_to, target_game, throws)
 
     # 各アイテムのマスタを取得
     # game_cat_list, ground_list, opponent_list, course_list, pitch_list, pitching_esults_list, ball_attributes_list, ball_direction_list, batting_results_list, pitcher_RL_list = ds.getItems(df_master)
@@ -42,8 +46,12 @@ if __name__ == "__main__":
     # カウント別の成績
     df_count_ab = ds.getCountAB(df_score_result_ab, df_score_result_hit)
 
+    list_direction_ad, list_direction_hit = ds.getDirectionResult(df_master, df_score_result_ab, df_score_result_hit)
+
+    field = ds.drawDirection(list_direction_ad, list_direction_hit)
+
     # cv2_imshow(img)
-    cv2.imshow('Image-1', img)
+    cv2.imshow('Image-1', field)
     # キー入力を待つ
     cv2.waitKey(0)
     # キーが入力されたら画像を閉じる
