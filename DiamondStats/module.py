@@ -84,11 +84,14 @@ def setBSO(df_score):
 
         if row.投球結果.startswith("(S)") or row.投球結果.startswith("(F)"):
             s = min(s + 1, 2)
-        if row.投球結果.startswith("(B)") or row.投球結果.startswith("(F)"):
-            b = min(b + 1, 3)
+        if row.投球結果.startswith("(B)"):
+            b = min(b + 1, 4)
 
         df_score.at[row.Index, "B"] = b
         df_score.at[row.Index, "S"] = s
+
+        if b == 4:
+            df_score.at[row.Index, "打撃結果"] = "四球"
 
     return df_score 
 
@@ -219,8 +222,8 @@ def getDirectionResult(df_master, df_score_result_ab, df_score_result_hit):
     df_direction['打数'] = df_direction['打数'].fillna(0).astype(int)
     df_direction['安打数'] = df_direction['安打数'].fillna(0).astype(int)
 
-    list_direction_ad = [0,0,0,0,0,0,0,0,0]
-    list_direction_hit = [0,0,0,0,0,0,0,0,0]
+    list_direction_ad = [0,0,0,0,0,0,0,0,0,0]
+    list_direction_hit = [0,0,0,0,0,0,0,0,0,0]
     list_direction_ad[0] = int(df_direction[df_direction['打球方向'] == '投手']['打数'].iloc[0])
     list_direction_hit[0] = int(df_direction[df_direction['打球方向'] == '投手']['安打数'].iloc[0])
     list_direction_ad[1] = int(df_direction[df_direction['打球方向'] == '捕手']['打数'].iloc[0])
@@ -239,6 +242,10 @@ def getDirectionResult(df_master, df_score_result_ab, df_score_result_hit):
     list_direction_hit[7] = int(df_direction[df_direction['打球方向'] == '中堅手']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '左中間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '右中間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'センターオーバー']['安打数'].iloc[0])
     list_direction_ad[8] = int(df_direction[df_direction['打球方向'] == '右翼手']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '一二塁間']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライト線']['打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライトオーバー']['打数'].iloc[0])
     list_direction_hit[8] = int(df_direction[df_direction['打球方向'] == '右翼手']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == '一二塁間']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライト線']['安打数'].iloc[0]) + int(df_direction[df_direction['打球方向'] == 'ライトオーバー']['安打数'].iloc[0])
+
+    list_direction_ad[9] = sum(list_direction_ad[0:6])
+    list_direction_hit[9] = sum(list_direction_hit[0:6])
+
     return list_direction_ad, list_direction_hit
 
 def drawDirection(list_direction_ad, list_direction_hit):
@@ -336,4 +343,35 @@ def drawDirection(list_direction_ad, list_direction_hit):
     cv2.putText(field, f"{ave:.3f}".lstrip('0'), (560 - text_width//2, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
     cv2.putText(field, f"{list_direction_ad[8]}-{list_direction_hit[8]}", (560 - ab_text_width//2, 233), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
 
+    # 内野安打
+    ave = 0 if list_direction_ad[9] == 0 else list_direction_hit[9]/list_direction_ad[9]
+    (text_width, text_height), baseline = cv2.getTextSize(f"{ave:.3f}".lstrip('0'), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    (ab_text_width, text_height), baseline = cv2.getTextSize(f"{list_direction_ad[9]}-{list_direction_hit[9]}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+    cv2.putText(field, f"{ave:.3f}".lstrip('0'), (620 - text_width//2, 460), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), thickness=2)
+    cv2.putText(field, f"{list_direction_ad[9]}-{list_direction_hit[9]}", (620 - ab_text_width//2, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), thickness=2)
+
     return field
+
+def getSelective(df_master, df_score):
+
+
+    strikeCount = df_score['コース'].str.startswith('(S)').sum()
+    ballCount = df_score['コース'].str.startswith('(B)').sum()
+
+    swingBall = 0
+    looking = 0
+    swinging = 0
+
+    for row in df_score.itertuples(index=True, name="Row"):
+        if row.コース.startswith('(B)') and (row.投球結果.startswith('(S)') or row.投球結果.startswith('(F)') or row.投球結果.startswith('インプレー') or row.投球結果.startswith('(IP)')):
+            swingBall += 1
+
+        elif row.投球結果.startswith('(S)見逃し'):
+            looking += 1
+        elif row.投球結果.startswith('(S)空振り'):
+            swinging += 1
+
+
+    return ballCount, strikeCount, swingBall, swinging
+
+
