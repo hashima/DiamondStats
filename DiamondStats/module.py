@@ -51,7 +51,7 @@ def initDataFrames(df_master, df_gameinfo, df_score, dt_from, dt_to, target_game
     if dt_from != "" or dt_to != "":
         df_score = df_score[df_score['試合No'].isin(df_gameinfo['試合No'])]
     
-    df_score = df_score.loc[:, :'アウト']
+    df_score = df_score.loc[:, :'打撃結果']
     df_score = df_score.dropna(subset=['試合No'])
     if throws == '対右投手':
         df_score = df_score.query("投 == '右'").copy()
