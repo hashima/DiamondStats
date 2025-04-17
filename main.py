@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     field = ds.drawDirection(list_direction_ad, list_direction_hit)
 
-    ballCount, strikeCount, swingBall, swinging = ds.getSelective(df_master, df_score)
+    ballCount, strikeCount, swingBall, looking, swinging = ds.getSelective(df_master, df_score)
 
     # cv2_imshow(img)
     cv2.imshow('Image-1', field)

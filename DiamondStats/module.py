@@ -372,6 +372,6 @@ def getSelective(df_master, df_score):
             swinging += 1
 
 
-    return ballCount, strikeCount, swingBall, swinging
+    return ballCount, strikeCount, swingBall, looking, swinging
 
 
